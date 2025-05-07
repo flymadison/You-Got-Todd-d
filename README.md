@@ -16,7 +16,10 @@ I built this little mess of an application to keep track for me. Why?
 ## How To Use
 
 ### Setup
-Start the application, then set up a **Text (GDI)** source in OBS that reads from the **todd.txt** file. Then, Skyrim does the rest!
+
+Change the `filePath` variable to the full file path to where you want to store the todd.txt file, then compile the solution in Visual Studio.
+
+To use, start the application, then set up a **Text (GDI)** source in OBS that reads from the **todd.txt** file. Then, Skyrim does the rest!
 
 ### Commands
 
