@@ -8,14 +8,15 @@ class Program
     private static ManagementEventWatcher watcher;
     private static ManualResetEvent shutdownEvent = new ManualResetEvent(false);
     private static string todds = new($"0"); // Initialize the Todd count
+    private static string filePath = @"full-file-path-to\todd.txt"; // The full filepath to the Todd count text file, will be made relative to the program later
     static void Main(string[] args)
     {
-        if(!File.Exists("todd.txt"))
+        if(!File.Exists(filePath))
         {
-            File.Create("todd.txt").Close();
-            File.WriteAllText("todd.txt", $"0"); // Initialize the file with 0
+            File.Create(filePath).Close();
+            File.WriteAllText(filePath, $"0"); // Initialize the file with 0
         }
-        todds = File.ReadAllText("todd.txt");
+        todds = File.ReadAllText(filePath);
         Console.CancelKeyPress += (sender, eventArgs) =>
         {
             Console.WriteLine("\nStopping monitoring...");
@@ -33,14 +34,14 @@ class Program
                 {
                     case ConsoleModifiers.Control when keyInfo.Key == ConsoleKey.M:
                         todds = (int.Parse(todds) + 1).ToString(); // Increment Todd count
-                        File.WriteAllText("todd.txt", todds);
+                        File.WriteAllText(filePath, (todds).ToString());
                         Console.WriteLine($"Current Todd count: {todds} Todds.");
                         break;
                     case ConsoleModifiers.Control when keyInfo.Key == ConsoleKey.N:
                         if (int.Parse(todds) > 0)
                         {
                             todds = (int.Parse(todds) - 1).ToString(); // Decrement Todd count
-                            File.WriteAllText("todd.txt", todds);
+                            File.WriteAllText(filePath, todds);
                             Console.WriteLine($"Current Todd count: {todds} Todds.");
                         }
                         else
@@ -96,7 +97,7 @@ class Program
                     {
                         Console.WriteLine("Abnormal termination detected.\nIncrementing Todd count by 1.");
                         todds = (int.Parse(todds) + 1).ToString(); // Increment Todd count;
-                        File.WriteAllText("todd.txt", (todds).ToString());
+                        File.WriteAllText(filePath, (todds).ToString());
                     }
                     else
                     {
