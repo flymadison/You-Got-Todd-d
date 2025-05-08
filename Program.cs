@@ -1,22 +1,20 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Management;
-using System.Threading;
 
 class Program
 {
     private static ManagementEventWatcher watcher;
     private static ManualResetEvent shutdownEvent = new ManualResetEvent(false);
     private static string todds = new($"0"); // Initialize the Todd count
-    private static string filePath = @"full-file-path-to\todd.txt"; // The full filepath to the Todd count text file, will be made relative to the program later
+    private static string filePath = @"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt"; // File to store Todd count
     static void Main(string[] args)
     {
-        if(!File.Exists(filePath))
+        if(!File.Exists(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt"))
         {
-            File.Create(filePath).Close();
-            File.WriteAllText(filePath, $"0"); // Initialize the file with 0
+            File.Create(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt").Close();
+            File.WriteAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt", $"0"); // Initialize the file with 0
         }
-        todds = File.ReadAllText(filePath);
+        todds = File.ReadAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt");
         Console.CancelKeyPress += (sender, eventArgs) =>
         {
             Console.WriteLine("\nStopping monitoring...");
@@ -34,14 +32,14 @@ class Program
                 {
                     case ConsoleModifiers.Control when keyInfo.Key == ConsoleKey.M:
                         todds = (int.Parse(todds) + 1).ToString(); // Increment Todd count
-                        File.WriteAllText(filePath, (todds).ToString());
+                        File.WriteAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt", (todds).ToString());
                         Console.WriteLine($"Current Todd count: {todds} Todds.");
                         break;
                     case ConsoleModifiers.Control when keyInfo.Key == ConsoleKey.N:
                         if (int.Parse(todds) > 0)
                         {
                             todds = (int.Parse(todds) - 1).ToString(); // Decrement Todd count
-                            File.WriteAllText(filePath, todds);
+                            File.WriteAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt", todds);
                             Console.WriteLine($"Current Todd count: {todds} Todds.");
                         }
                         else
@@ -97,7 +95,7 @@ class Program
                     {
                         Console.WriteLine("Abnormal termination detected.\nIncrementing Todd count by 1.");
                         todds = (int.Parse(todds) + 1).ToString(); // Increment Todd count;
-                        File.WriteAllText(filePath, (todds).ToString());
+                        File.WriteAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt", (todds).ToString());
                     }
                     else
                     {
