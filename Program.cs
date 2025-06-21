@@ -6,15 +6,26 @@ class Program
     private static ManagementEventWatcher watcher;
     private static ManualResetEvent shutdownEvent = new ManualResetEvent(false);
     private static string todds = new($"0"); // Initialize the Todd count
-    private static string filePath = @"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt"; // File to store Todd count
+    private static string filePath = ""; // File to store Todd count
+    private static string game = "";
     static void Main(string[] args)
     {
-        if(!File.Exists(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt"))
+        try
         {
-            File.Create(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt").Close();
-            File.WriteAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt", $"0"); // Initialize the file with 0
+            filePath = args[0];
+            game = args[1];
+        } catch (IndexOutOfRangeException)
+        {
+            Console.WriteLine("No todd file and/or game provided.");
+            Environment.Exit(1);
         }
-        todds = File.ReadAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt");
+
+        if (!File.Exists(filePath))
+        {
+            File.Create(filePath).Close();
+            File.WriteAllText(filePath, $"0"); // Initialize the file with 0
+        }
+        todds = File.ReadAllText(filePath);
         Console.CancelKeyPress += (sender, eventArgs) =>
         {
             Console.WriteLine("\nStopping monitoring...");
@@ -32,14 +43,14 @@ class Program
                 {
                     case ConsoleModifiers.Control when keyInfo.Key == ConsoleKey.M:
                         todds = (int.Parse(todds) + 1).ToString(); // Increment Todd count
-                        File.WriteAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt", (todds).ToString());
+                        File.WriteAllText(filePath, (todds).ToString());
                         Console.WriteLine($"Current Todd count: {todds} Todds.");
                         break;
                     case ConsoleModifiers.Control when keyInfo.Key == ConsoleKey.N:
                         if (int.Parse(todds) > 0)
                         {
                             todds = (int.Parse(todds) - 1).ToString(); // Decrement Todd count
-                            File.WriteAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt", todds);
+                            File.WriteAllText(filePath, todds);
                             Console.WriteLine($"Current Todd count: {todds} Todds.");
                         }
                         else
@@ -54,7 +65,7 @@ class Program
         keyListener.Start();
 
         StartWatcher();
-        Console.WriteLine($"Monitoring for SkyrimSE.exe...\n\nPress Ctrl+C to exit\nPress Ctrl+M to +1 Todd count\nPress Ctrl+N to -1 Todd count\nCurrent Todd count: {todds} Todds.");
+        Console.WriteLine($"Monitoring for {game}.exe...\n\nPress Ctrl+C to exit\nPress Ctrl+M to +1 Todd count\nPress Ctrl+N to -1 Todd count\nCurrent Todd count: {todds} Todds.");
         shutdownEvent.WaitOne(); // Keep the main thread alive until Ctrl+C
     }
 
@@ -63,8 +74,10 @@ class Program
         var scope = new ManagementScope(@"\\.\root\CIMV2");
         scope.Connect();
 
+        var queryString = $@"SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA ""Win32_Process"" AND TargetInstance.Name = '{game}.exe'";
         var query = new WqlEventQuery(
-            @"SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA ""Win32_Process"" AND TargetInstance.Name = 'SkyrimSE.exe'"
+            //$@"SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA ""Win32_Process"" AND TargetInstance.Name = 'SkyrimSE.exe'"
+            queryString
         );
 
         watcher = new ManagementEventWatcher(scope, query);
@@ -77,7 +90,7 @@ class Program
         var targetInstance = (ManagementBaseObject)e.NewEvent["TargetInstance"];
         int processId = Convert.ToInt32(targetInstance["ProcessId"]);
 
-        Console.WriteLine($"SkyrimSE.exe started with PID {processId}");
+        Console.WriteLine($"{game}.exe started with PID {processId}");
 
         try
         {
@@ -89,13 +102,13 @@ class Program
                 try
                 {
                     int exitCode = process.ExitCode;
-                    Console.WriteLine($"SkyrimSE.exe exited. Exit code: {exitCode}");
+                    Console.WriteLine($"{game}.exe exited. Exit code: {exitCode}");
 
                     if (exitCode != 0 && exitCode != -1)
                     {
                         Console.WriteLine("Abnormal termination detected.\nIncrementing Todd count by 1.");
                         todds = (int.Parse(todds) + 1).ToString(); // Increment Todd count;
-                        File.WriteAllText(@"C:\Games\Skyrim SE Tools\You Got Todd'd\todd.txt", (todds).ToString());
+                        File.WriteAllText(filePath, (todds).ToString());
                     }
                     else
                     {
@@ -105,7 +118,7 @@ class Program
 
                 catch
                 {
-                    Console.WriteLine("SkyrimSE.exe exited, but exit code could not be read.");
+                    Console.WriteLine($"{game}.exe exited, but exit code could not be read.");
                 }
             };
         }
